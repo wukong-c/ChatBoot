@@ -1,0 +1,73 @@
+{
+  "name": "projectname",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "lint": "eslint \"src/**/*.{js,vue}\" --fix",
+    "build": "npm run lint && vite build",
+    "preview": "vite preview",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{js,vue}": [
+      "npm run lint"
+    ]
+  },
+  "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "axios": "^1.7.9",
+    "dompurify": "^3.0.9",
+    "echarts": "^5.6.0",
+    "element-plus": "^2.9.3",
+    "github-markdown-css": "^5.8.1",
+    "html2canvas": "^1.4.1",
+    "js-cookie": "^3.0.5",
+    "jsencrypt": "^3.3.2",
+    "marked": "^12.0.2",
+    "mitt": "^3.0.1",
+    "moment": "^2.30.1",
+    "pinia": "^2.3.0",
+    "qs": "^6.11.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/eslint-parser": "^7.26.5",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@iconify-json/ep": "^1.2.2",
+    "@vitejs/plugin-legacy": "^6.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-vue": "^9.32.0",
+    "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "node": "^22.13.0",
+    "prettier": "^3.4.2",
+    "sass": "^1.83.1",
+    "svg-sprite-loader": "^6.0.11",
+    "unplugin-auto-import": "^19.0.0",
+    "unplugin-element-plus": "^0.9.0",
+    "unplugin-icons": "^22.0.0",
+    "unplugin-vue-components": "^28.0.0",
+    "vite": "^6.0.7",
+    "vite-plugin-eslint2": "^5.0.3",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-svg-icons": "^2.0.1",
+    "vite-plugin-top-level-await": "^1.4.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

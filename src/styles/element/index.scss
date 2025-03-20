@@ -1,0 +1,24 @@
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
+  $colors: (
+    "primary": (
+      "base": #2780fb,
+    ),
+  ),
+  $border-radius: (
+    "base": 0px,
+    "small": 0px,
+    "round": 0px,
+    "circle": 100%,
+  ),
+  $tag: (
+    "border-radius": 0px,
+  ),
+  $card: (
+    "border-radius": 0px,
+  ),
+  $notification: (
+    "radius": 0px,
+  )
+);
+//全局主题色
+$TC: #2780fb;
