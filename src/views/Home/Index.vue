@@ -184,7 +184,6 @@ const handleDeleteSession = async sessionId => {
 
 // 取消当前流式输出
 const cancelCurrentStreaming = () => {
-  console.log("currentEventSource", currentEventSource);
   if (currentEventSource) {
     currentEventSource.close();
     currentEventSource = null;
@@ -207,7 +206,6 @@ const handleStreamUpdate = data => {
 
     // 更新消息数组
     messages.value = newMessages;
-    console.log("消息数组已更新，长度:", messages.value.length);
   }
 };
 

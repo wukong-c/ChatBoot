@@ -87,7 +87,7 @@ class ChatService:
         
         # 构建消息历史
         messages = [system_message] + history
-        
+        print("messages", messages)
         return {
             "session_id": session_id,
             "messages": messages
@@ -198,19 +198,6 @@ class ChatService:
         assistant_message.content = full_response
         db.add(assistant_message)
         db.commit()
-        
-        # 发送完成信号
-        yield {
-            "session_id": session_id,
-            "message": {
-                "id": assistant_message.id,
-                "role": "assistant",
-                "content": full_response,
-                "session_id": session_id,
-                "created_at": assistant_message.created_at.isoformat()
-            },
-            "done": True
-        }
 
 
 # 单例模式

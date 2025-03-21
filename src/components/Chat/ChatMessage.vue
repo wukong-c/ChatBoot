@@ -7,10 +7,14 @@
     </div>
     <div class="message-content">
       <div class="message-header">
-        <span class="role">{{ isUser ? "用户" : "AI助手" }}</span>
         <span class="time">{{ formatTime(message.created_at) }}</span>
       </div>
-      <div class="message-body markdown-body" v-html="formattedContent"></div>
+      <div
+        v-if="formattedContent"
+        class="message-body markdown-body"
+        :class="{ isUser: isUser }"
+        v-html="formattedContent"
+      ></div>
       <div v-if="!isUser && isStreaming" class="typing-indicator">
         <span></span>
         <span></span>
@@ -21,7 +25,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import moment from "moment";
@@ -44,17 +48,26 @@ const props = defineProps({
 });
 
 const isUser = computed(() => props.message.role === "user");
+const cachedContent = ref("");
 
-// 格式化消息内容，支持Markdown
-const formattedContent = computed(() => {
-  if (!props.message.content) return "";
+// 使用缓存机制优化Markdown解析
+watch(
+  () => props.message.content,
+  (newContent) => {
+    if (!newContent) {
+      cachedContent.value = "";
+      return;
+    }
+    // 使用marked转换Markdown为HTML
+    const rawHtml = marked.parse(newContent);
+    // 使用DOMPurify清理HTML，防止XSS
+    cachedContent.value = DOMPurify.sanitize(rawHtml);
+  },
+  { immediate: true }
+);
 
-  // 使用marked转换Markdown为HTML
-  const rawHtml = marked.parse(props.message.content);
-
-  // 使用DOMPurify清理HTML，防止XSS
-  return DOMPurify.sanitize(rawHtml);
-});
+// 格式化消息内容，使用缓存的结果
+const formattedContent = computed(() => cachedContent.value);
 
 // 格式化时间
 const formatTime = timestamp => {
@@ -71,11 +84,18 @@ const formatTime = timestamp => {
   border-radius: 8px;
 
   &.user-message {
-    background-color: rgba(64, 158, 255, 0.05);
-  }
+    flex-direction: row-reverse; // 用户消息靠右
 
-  &.ai-message {
-    background-color: rgba(103, 194, 58, 0.05);
+    .avatar {
+      margin-left: 12px;
+      margin-right: 0;
+    }
+
+    .message-content {
+      .message-header {
+        flex-direction: row-reverse; // 用户信息靠右
+      }
+    }
   }
 
   .avatar {
@@ -84,47 +104,45 @@ const formatTime = timestamp => {
   }
 
   .message-content {
-    flex: 1;
+    flex: 0 1 auto;
+    max-width: 80%;
+    width: fit-content;
 
     .message-header {
       display: flex;
       justify-content: space-between;
       margin-bottom: 6px;
 
-      .role {
-        font-weight: bold;
-      }
-
       .time {
         color: #999;
         font-size: 12px;
+        padding-right: 6px;
       }
     }
 
     .message-body {
-      line-height: 1.6;
-      white-space: pre-wrap;
+      line-height: 24px;
       word-break: break-word;
-
-      code {
-        background-color: #f6f8fa;
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-      }
-
-      pre {
-        background-color: #f6f8fa;
-        padding: 16px;
-        border-radius: 6px;
-        overflow-x: auto;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+      &.isUser {
+        * {
+          white-space: pre-wrap;
+        }
       }
     }
 
     .typing-indicator {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       margin-top: 8px;
+      padding: 8px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      width: fit-content;
 
       span {
         display: inline-block;
@@ -163,51 +181,6 @@ const formatTime = timestamp => {
   30% {
     transform: translateY(-4px);
     opacity: 1;
-  }
-}
-
-// Markdown样式
-:deep(.markdown-body) {
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    margin-top: 16px;
-    margin-bottom: 16px;
-    font-weight: 600;
-  }
-
-  ul,
-  ol {
-    padding-left: 20px;
-  }
-
-  table {
-    border-collapse: collapse;
-    margin-bottom: 16px;
-
-    th,
-    td {
-      border: 1px solid #dfe2e5;
-      padding: 6px 13px;
-    }
-
-    th {
-      background-color: #f6f8fa;
-    }
-  }
-
-  blockquote {
-    padding: 0 16px;
-    color: #6a737d;
-    border-left: 4px solid #dfe2e5;
-    margin: 16px 0;
-  }
-
-  img {
-    max-width: 100%;
   }
 }
 </style>

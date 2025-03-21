@@ -26,22 +26,22 @@
 
       <template v-else>
         <ChatMessage
-          v-for="(message, index) in props.messages"
-          :key="message.id || 'streaming-' + index"
+          v-for="message in displayMessages"
+          :key="message.id || `temp-${message.created_at}`"
           :message="message"
-          :is-streaming="index === streamingIndex.value"
+          :is-streaming="message.isStreaming"
         />
       </template>
     </div>
 
     <div class="input-container">
-      <ChatInput :loading="inputLoading" :disabled="streamingData !== null" @send="handleSendMessage" />
+      <ChatInput :loading="props.loading" :disabled="streamingData !== null" @send="handleSendMessage" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onBeforeUnmount } from "vue";
+import { ref, watch, nextTick, onBeforeUnmount, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { ChatLineRound } from "@element-plus/icons-vue";
 import ChatMessage from "./ChatMessage.vue";
@@ -62,10 +62,9 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["send", "stream"]);
+const emit = defineEmits(["send", "stream", "stream-end"]);
 
 const messageListRef = ref(null);
-const inputLoading = ref(false);
 const streamingData = ref(null);
 const streamingIndex = ref(-1);
 let eventSource = null;
@@ -83,8 +82,6 @@ const handleSendMessage = message => {
   if (streamingData.value !== null) {
     return;
   }
-
-  inputLoading.value = true;
 
   // 告知父组件发送消息
   emit("send", {
@@ -107,19 +104,14 @@ const startStreaming = initialMessage => {
   };
 
   // 计算流式消息在数组中的索引
-  console.log("props.messages", props.messages);
   streamingIndex.value = props.messages.length - 1;
-  console.log("开始流式输出，索引设置为:", streamingIndex.value);
 };
 
 // 添加流式内容（适用于fetchEventSource）
 const appendStreamingContent = data => {
   if (!streamingData.value) return;
-  console.log("props.messages", props.messages);
-
   if (data.message && data.message.content) {
     streamingData.value.content += data.message.content;
-
     // 发送流式更新到父组件
     emit("stream", {
       content: streamingData.value.content,
@@ -136,7 +128,6 @@ const finishStreaming = () => {
   console.log("完成流式输出，重置状态");
   streamingData.value = null;
   streamingIndex.value = -1;
-  inputLoading.value = false;
 
   // 通知父组件流式处理结束
   emit("stream-end");
@@ -157,11 +148,30 @@ const setEventSource = source => {
   eventSource = source;
 };
 
+// 添加计算属性优化消息列表渲染
+const displayMessages = computed(() => {
+  return props.messages.map((msg, index) => ({
+    ...msg,
+    isStreaming: index === streamingIndex.value,
+  }));
+});
+
 // 监听消息列表变化，自动滚动到底部
 watch(
   () => props.messages,
-  async () => {
-    if (props.messages.length > 0) {
+  async (newMessages, oldMessages) => {
+    // 只在以下情况下执行滚动：
+    // 1. 消息列表从空变为非空
+    // 2. 消息数量增加（新消息添加）
+    // 3. 最后一条消息内容变化（流式输出更新）
+    const shouldScroll =
+      (oldMessages.length === 0 && newMessages.length > 0) ||
+      newMessages.length > oldMessages.length ||
+      (newMessages.length > 0 &&
+        oldMessages.length > 0 &&
+        newMessages[newMessages.length - 1].content !== oldMessages[oldMessages.length - 1].content);
+
+    if (shouldScroll && newMessages.length > 0) {
       await nextTick();
       if (messageListRef.value) {
         messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
@@ -169,14 +179,6 @@ watch(
     }
   },
   { deep: true }
-);
-
-// 监听加载状态变化
-watch(
-  () => props.loading,
-  newVal => {
-    inputLoading.value = newVal;
-  }
 );
 
 // 在组件销毁前清理
